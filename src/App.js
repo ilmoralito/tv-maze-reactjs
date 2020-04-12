@@ -1,6 +1,7 @@
 import React from 'react';
 import './App.css';
 import Highlight from 'react-highlighter';
+import ReactCountryFlag from 'react-country-flag';
 
 const API = 'https://api.tvmaze.com';
 
@@ -85,6 +86,17 @@ function ShowDetail({ show }) {
                     <table>
                         <tbody>
                             <tr>
+                                <td>Premiered</td>
+                                <td>{show.premiered}</td>
+                            </tr>
+                            <tr>
+                                <td>Network</td>
+                                <td>
+                                    {show?.network?.name}{' '}
+                                    <ReactCountryFlag countryCode={show?.network?.country?.code} />
+                                </td>
+                            </tr>
+                            <tr>
                                 <td>Type</td>
                                 <td>{show.type}</td>
                             </tr>
@@ -105,12 +117,14 @@ function ShowDetail({ show }) {
                                 <td>{show.runtime}</td>
                             </tr>
                             <tr>
-                                <td>Premiered</td>
-                                <td>{show.premiered}</td>
-                            </tr>
-                            <tr>
-                                <td>Official site</td>
-                                <td>{show.officialSite}</td>
+                                <td>Site</td>
+                                <td>
+                                    {show.officialSite && (
+                                        <a href={show.officialSite} alt={show.name}>
+                                            {show.name}
+                                        </a>
+                                    )}
+                                </td>
                             </tr>
                             <tr>
                                 <td>Externals</td>
