@@ -302,7 +302,6 @@ function Tabs({ isEpisodesOpen, isCastOpen, onClick }) {
 }
 
 function Form({ onSubmit }) {
-  const [isDisabled, setIsDisabled] = useState(true);
   const [query, setQuery] = useState("");
 
   return (
@@ -322,12 +321,11 @@ function Form({ onSubmit }) {
           value={query}
           onChange={(event) => {
             setQuery(event.target.value);
-            setIsDisabled(!event.target.value)
           }}
         />
       </div>
       <div className="group">
-        <button type="submit" disabled={isDisabled}>
+        <button type="submit" disabled={!query}>
           Send
         </button>
       </div>
