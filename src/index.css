@@ -66,6 +66,40 @@ details details {
     padding-left: 20px;
 }
 
+figure {
+    border: 1px solid #dddddd;
+    margin: 0 10px 10px 0;
+    display: table;
+    padding: 10px;
+}
+
+figure:last-child {
+    margin-bottom: 0;
+}
+
+figure img {
+    width: 150px;
+}
+
+.tabs {
+    margin: 0 0 20px 0;
+    list-style: none;
+    padding: 0;
+}
+
+.tabs li {
+    display: inline;
+    padding: 10px;
+}
+
+.tabs li:first-child {
+    padding-left: 0;
+}
+
+.tabs li a {
+    text-decoration: none;
+}
+
 code {
     font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
 }

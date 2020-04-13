@@ -14,6 +14,7 @@ async function fetcher(endpoint) {
 function App() {
     const [show, setShow] = React.useState({});
     const [episodes, setEpisodes] = React.useState([]);
+    const [cast, setCast] = React.useState(null);
     const [shows, setShows] = React.useState([]);
     const [isLoading, setIsLoading] = React.useState(false);
     const [hasErrors, setHasErrors] = React.useState(false);
@@ -39,15 +40,16 @@ function App() {
     }
 
     function clickHandler(id) {
-        const endpoints = [`/shows/${id}`, `/shows/${id}/episodes`];
+        const endpoints = [`/shows/${id}`, `/shows/${id}/episodes`, `/shows/${id}/cast`];
         const promises = endpoints.map((endpoint) => fetcher(endpoint));
 
         Promise.all(promises)
             .then((data) => {
-                const [show, episodes] = data;
+                const [show, episodes, cast] = data;
 
                 setShow(show);
                 setEpisodes(episodes);
+                setCast(cast);
             })
             .catch((error) => {
                 console.error(error.message);
@@ -62,7 +64,7 @@ function App() {
                 {isLoading ? <IsLoading /> : <Shows shows={shows} onClick={clickHandler} />}
             </div>
             <ShowDetail show={show} />
-            <ShowEpisodes episodes={episodes} />
+            <ShowSummary episodes={episodes} cast={cast} />
         </>
     );
 }
@@ -140,13 +142,20 @@ function ShowDetail({ show }) {
     );
 }
 
-function ShowEpisodes({ episodes }) {
+function ShowSummary({ episodes, cast: castList }) {
     const [seasons, setSeasons] = React.useState([]);
+    const [cast, setCast] = React.useState([]);
     const [filter, setFilter] = React.useState('');
+    const [isEpisodesOpen, setIsEpisodesOpen] = React.useState(true);
+    const [isCastOpen, setIsCastOpen] = React.useState(false);
 
     React.useEffect(() => {
         setSeasons(groupEposiodesBySeason(episodes));
     }, [episodes]);
+
+    React.useEffect(() => {
+        setCast(castList);
+    }, [castList]);
 
     return (
         <div>
@@ -154,23 +163,59 @@ function ShowEpisodes({ episodes }) {
                 <div />
             ) : (
                 <>
-                    <input
-                        placeholder="Filter by episode name"
-                        onChange={(event) => setFilter(event.target.value)}
-                        style={{ marginBottom: '10px' }}
-                        value={filter}
-                    />
-                    {seasons
-                        .filter((season) => {
-                            const [, episodes] = season;
+                    <ul className="tabs">
+                        <li>
+                            <a
+                                href="!#"
+                                style={{ textDecoration: isEpisodesOpen ? 'underline' : 'none' }}
+                                onClick={(event) => {
+                                    event.preventDefault();
 
-                            return episodes.some((episode) =>
-                                episode.name.toLowerCase().includes(filter.toLowerCase())
-                            );
-                        })
-                        .map(([number, episodes]) => {
-                            return <Season key={number} number={number} episodes={episodes} filter={filter} />;
-                        })}
+                                    setIsEpisodesOpen(true);
+                                    setIsCastOpen(false);
+                                }}
+                            >
+                                Episodes
+                            </a>
+                        </li>
+                        <li>
+                            <a
+                                href="!#"
+                                style={{ textDecoration: isCastOpen ? 'underline' : 'none' }}
+                                onClick={(event) => {
+                                    event.preventDefault();
+
+                                    setIsEpisodesOpen(false);
+                                    setIsCastOpen(true);
+                                }}
+                            >
+                                Cast
+                            </a>
+                        </li>
+                    </ul>
+                    {isEpisodesOpen ? (
+                        <>
+                            <input
+                                placeholder="Filter by episode name"
+                                onChange={(event) => setFilter(event.target.value)}
+                                style={{ marginBottom: '10px' }}
+                                value={filter}
+                            />
+                            {seasons
+                                .filter((season) => {
+                                    const [, episodes] = season;
+
+                                    return episodes.some((episode) =>
+                                        episode.name.toLowerCase().includes(filter.toLowerCase())
+                                    );
+                                })
+                                .map(([number, episodes]) => {
+                                    return <Season key={number} number={number} episodes={episodes} filter={filter} />;
+                                })}
+                        </>
+                    ) : (
+                        <Cast cast={cast} />
+                    )}
                 </>
             )}
         </div>
@@ -261,6 +306,28 @@ function Episode({ episode, filter }) {
             {episode.image && <img src={episode.image.medium} alt={episode.name} />}
             <p dangerouslySetInnerHTML={createMarkup(episode.summary)} />
         </details>
+    );
+}
+
+function Cast({ cast }) {
+    return (
+        <div style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center' }}>
+            {cast.map((entry) => {
+                const { person, character } = entry;
+
+                return (
+                    <figure key={entry.person.id}>
+                        <img src={character?.image?.medium} alt={character.name} />
+                        <figcaption>
+                            <p style={{ margin: '10px 0 0 0' }}>{person.name} as</p>
+                            <p style={{ margin: 0 }}>
+                                <strong>{character.name}</strong>
+                            </p>
+                        </figcaption>
+                    </figure>
+                );
+            })}
+        </div>
     );
 }
 
