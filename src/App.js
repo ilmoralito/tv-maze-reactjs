@@ -18,6 +18,8 @@ function App() {
     const [shows, setShows] = React.useState([]);
     const [isLoading, setIsLoading] = React.useState(false);
     const [hasErrors, setHasErrors] = React.useState(false);
+    const [isSummaryLoading, setIsSummaryLoading] = React.useState(false);
+    const [hasSummaryLoadingErrors, setHasSummaryLoadingErrors] = React.useState(false);
 
     function submitHandler(query) {
         setIsLoading(true);
@@ -43,15 +45,23 @@ function App() {
         const endpoints = [`/shows/${id}`, `/shows/${id}/episodes`, `/shows/${id}/cast`];
         const promises = endpoints.map((endpoint) => fetcher(endpoint));
 
+        setIsSummaryLoading(true);
+        setHasSummaryLoadingErrors(false);
+
         Promise.all(promises)
             .then((data) => {
                 const [show, episodes, cast] = data;
+
+                setIsSummaryLoading(false);
 
                 setShow(show);
                 setEpisodes(episodes);
                 setCast(cast);
             })
             .catch((error) => {
+                setHasSummaryLoadingErrors(true);
+                setIsSummaryLoading(false);
+
                 console.error(error.message);
             });
     }
@@ -63,8 +73,17 @@ function App() {
                 {hasErrors ? <HasErrors /> : null}
                 {isLoading ? <IsLoading /> : <Shows shows={shows} onClick={clickHandler} />}
             </div>
-            <ShowDetail show={show} />
-            <ShowSummary episodes={episodes} cast={cast} />
+            <ShowDetail
+                show={show}
+                isSummaryLoading={isSummaryLoading}
+                hasSummaryLoadingErrors={hasSummaryLoadingErrors}
+            />
+            <ShowSummary
+                episodes={episodes}
+                cast={cast}
+                isSummaryLoading={isSummaryLoading}
+                hasSummaryLoadingErrors={hasSummaryLoadingErrors}
+            />
         </>
     );
 }
@@ -77,72 +96,84 @@ function Shows({ shows, onClick }) {
     );
 }
 
-function ShowDetail({ show }) {
+function ShowDetail({ show, isSummaryLoading, hasSummaryLoadingErrors }) {
     return (
         <div>
-            {Object.keys(show).length > 0 && (
+            {hasSummaryLoadingErrors ? <HasErrors /> : null}
+            {isSummaryLoading ? (
+                <IsLoading />
+            ) : (
                 <>
-                    <h1>{show.name}</h1>
-                    <img src={show.image && show.image.medium} alt={show.name} />
-                    <p dangerouslySetInnerHTML={createMarkup(show.summary)} />
-                    <table>
-                        <tbody>
-                            <tr>
-                                <td>Premiered</td>
-                                <td>{show.premiered}</td>
-                            </tr>
-                            <tr>
-                                <td>Network</td>
-                                <td>
-                                    {show?.network?.name}{' '}
-                                    <ReactCountryFlag countryCode={show?.network?.country?.code} />
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>Type</td>
-                                <td>{show.type}</td>
-                            </tr>
-                            <tr>
-                                <td>Language</td>
-                                <td>{show.language}</td>
-                            </tr>
-                            <tr>
-                                <td>Genres</td>
-                                <td>{show.genres.join(', ')}</td>
-                            </tr>
-                            <tr>
-                                <td>Status</td>
-                                <td>{show.status}</td>
-                            </tr>
-                            <tr>
-                                <td>Runtime</td>
-                                <td>{show.runtime}</td>
-                            </tr>
-                            <tr>
-                                <td>Site</td>
-                                <td>
-                                    {show.officialSite && (
-                                        <a href={show.officialSite} alt={show.name}>
-                                            {show.name}
-                                        </a>
-                                    )}
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>Externals</td>
-                                <td>
-                                    <Externals externals={show.externals} />
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    {Object.keys(show).length > 0 && (
+                        <>
+                            <h1>{show.name}</h1>
+                            <img src={show.image && show.image.medium} alt={show.name} />
+                            <p dangerouslySetInnerHTML={createMarkup(show.summary)} />
+                            <ShowTable show={show} />
+                        </>
+                    )}
                 </>
             )}
         </div>
     );
 }
 
-function ShowSummary({ episodes, cast: castList }) {
+function ShowTable({ show }) {
+    return (
+        <table>
+            <tbody>
+                <tr>
+                    <td>Premiered</td>
+                    <td>{show.premiered}</td>
+                </tr>
+                <tr>
+                    <td>Network</td>
+                    <td>
+                        {show?.network?.name} <ReactCountryFlag countryCode={show?.network?.country?.code} />
+                    </td>
+                </tr>
+                <tr>
+                    <td>Type</td>
+                    <td>{show.type}</td>
+                </tr>
+                <tr>
+                    <td>Language</td>
+                    <td>{show.language}</td>
+                </tr>
+                <tr>
+                    <td>Genres</td>
+                    <td>{show.genres.join(', ')}</td>
+                </tr>
+                <tr>
+                    <td>Status</td>
+                    <td>{show.status}</td>
+                </tr>
+                <tr>
+                    <td>Runtime</td>
+                    <td>{show.runtime}</td>
+                </tr>
+                <tr>
+                    <td>Site</td>
+                    <td>
+                        {show.officialSite && (
+                            <a href={show.officialSite} alt={show.name}>
+                                {show.name}
+                            </a>
+                        )}
+                    </td>
+                </tr>
+                <tr>
+                    <td>Externals</td>
+                    <td>
+                        <Externals externals={show.externals} />
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    );
+}
+
+function ShowSummary({ episodes, cast: castList, isSummaryLoading, hasSummaryLoadingErrors }) {
     const [seasons, setSeasons] = React.useState([]);
     const [cast, setCast] = React.useState([]);
     const [filter, setFilter] = React.useState('');
@@ -157,68 +188,96 @@ function ShowSummary({ episodes, cast: castList }) {
         setCast(castList);
     }, [castList]);
 
+    function clickHandler(tab) {
+        if (tab === 'episodes') {
+            setIsEpisodesOpen(true);
+            setIsCastOpen(false);
+        } else {
+            setIsEpisodesOpen(false);
+            setIsCastOpen(true);
+        }
+    }
+
     return (
         <div>
-            {!seasons.length ? (
-                <div />
+            {hasSummaryLoadingErrors ? <HasErrors /> : null}
+            {isSummaryLoading ? (
+                <IsLoading />
             ) : (
                 <>
-                    <ul className="tabs">
-                        <li>
-                            <a
-                                href="!#"
-                                style={{ textDecoration: isEpisodesOpen ? 'underline' : 'none' }}
-                                onClick={(event) => {
-                                    event.preventDefault();
-
-                                    setIsEpisodesOpen(true);
-                                    setIsCastOpen(false);
-                                }}
-                            >
-                                Episodes
-                            </a>
-                        </li>
-                        <li>
-                            <a
-                                href="!#"
-                                style={{ textDecoration: isCastOpen ? 'underline' : 'none' }}
-                                onClick={(event) => {
-                                    event.preventDefault();
-
-                                    setIsEpisodesOpen(false);
-                                    setIsCastOpen(true);
-                                }}
-                            >
-                                Cast
-                            </a>
-                        </li>
-                    </ul>
-                    {isEpisodesOpen ? (
-                        <>
-                            <input
-                                placeholder="Filter by episode name"
-                                onChange={(event) => setFilter(event.target.value)}
-                                style={{ marginBottom: '10px' }}
-                                value={filter}
-                            />
-                            {seasons
-                                .filter((season) => {
-                                    const [, episodes] = season;
-
-                                    return episodes.some((episode) =>
-                                        episode.name.toLowerCase().includes(filter.toLowerCase())
-                                    );
-                                })
-                                .map(([number, episodes]) => {
-                                    return <Season key={number} number={number} episodes={episodes} filter={filter} />;
-                                })}
-                        </>
+                    {!seasons.length ? (
+                        <div />
                     ) : (
-                        <Cast cast={cast} />
+                        <>
+                            <Tabs isEpisodesOpen={isEpisodesOpen} isCastOpen={isCastOpen} onClick={clickHandler} />
+                            {isEpisodesOpen ? (
+                                <>
+                                    <input
+                                        placeholder="Filter by episode name"
+                                        onChange={(event) => setFilter(event.target.value)}
+                                        style={{ marginBottom: '10px' }}
+                                        value={filter}
+                                    />
+                                    {seasons
+                                        .filter((season) => {
+                                            const [, episodes] = season;
+
+                                            return episodes.some((episode) =>
+                                                episode.name.toLowerCase().includes(filter.toLowerCase())
+                                            );
+                                        })
+                                        .map(([number, episodes]) => {
+                                            return (
+                                                <Season
+                                                    key={number}
+                                                    number={number}
+                                                    episodes={episodes}
+                                                    filter={filter}
+                                                />
+                                            );
+                                        })}
+                                </>
+                            ) : (
+                                <Cast cast={cast} />
+                            )}
+                        </>
                     )}
                 </>
             )}
         </div>
+    );
+}
+
+function Tabs({ isEpisodesOpen, isCastOpen, onClick }) {
+    return (
+        <ul className="tabs">
+            <li>
+                <a
+                    href="!#"
+                    style={{ textDecoration: isEpisodesOpen ? 'underline' : 'none' }}
+                    onClick={(event) => {
+                        event.preventDefault();
+
+                        onClick('episodes');
+                    }}
+                >
+                    Episodes
+                </a>
+            </li>
+            <li>
+                <a
+                    href="!#"
+                    style={{ textDecoration: isCastOpen ? 'underline' : 'none' }}
+                    onClick={(event) => {
+                        event.preventDefault();
+
+                        onClick('cast');
+                    }}
+                >
+                    Cast
+                </a>
+            </li>
+        </ul>
     );
 }
 
