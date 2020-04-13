@@ -100,6 +100,8 @@ figure img {
     text-decoration: none;
 }
 
-code {
-    font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+@media screen and (max-width: 645px) {
+    #root {
+        flex-direction: column;
+    }
 }
