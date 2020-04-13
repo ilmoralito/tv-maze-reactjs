@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import "./App.css";
 import Highlight from "react-highlighter";
 import ReactCountryFlag from "react-country-flag";
@@ -12,16 +12,14 @@ async function fetcher(endpoint) {
 }
 
 function App() {
-  const [show, setShow] = React.useState({});
-  const [episodes, setEpisodes] = React.useState([]);
-  const [cast, setCast] = React.useState(null);
-  const [shows, setShows] = React.useState([]);
-  const [isLoading, setIsLoading] = React.useState(false);
-  const [hasErrors, setHasErrors] = React.useState(false);
-  const [isSummaryLoading, setIsSummaryLoading] = React.useState(false);
-  const [hasSummaryLoadingErrors, setHasSummaryLoadingErrors] = React.useState(
-    false
-  );
+  const [show, setShow] = useState({});
+  const [episodes, setEpisodes] = useState([]);
+  const [cast, setCast] = useState(null);
+  const [shows, setShows] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [hasErrors, setHasErrors] = useState(false);
+  const [isSummaryLoading, setIsSummaryLoading] = useState(false);
+  const [hasSummaryLoadingErrors, setHasSummaryLoadingErrors] = useState(false);
 
   function submitHandler(query) {
     setIsLoading(true);
@@ -190,17 +188,17 @@ function ShowSummary({
   isSummaryLoading,
   hasSummaryLoadingErrors,
 }) {
-  const [seasons, setSeasons] = React.useState([]);
-  const [cast, setCast] = React.useState([]);
-  const [filter, setFilter] = React.useState("");
-  const [isEpisodesOpen, setIsEpisodesOpen] = React.useState(true);
-  const [isCastOpen, setIsCastOpen] = React.useState(false);
+  const [seasons, setSeasons] = useState([]);
+  const [cast, setCast] = useState([]);
+  const [filter, setFilter] = useState("");
+  const [isEpisodesOpen, setIsEpisodesOpen] = useState(true);
+  const [isCastOpen, setIsCastOpen] = useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     setSeasons(groupEposiodesBySeason(episodes));
   }, [episodes]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     setCast(castList);
   }, [castList]);
 
@@ -304,7 +302,7 @@ function Tabs({ isEpisodesOpen, isCastOpen, onClick }) {
 }
 
 function Form({ onSubmit }) {
-  const [query, setQuery] = React.useState("");
+  const [query, setQuery] = useState("");
 
   return (
     <form
