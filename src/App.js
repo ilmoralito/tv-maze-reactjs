@@ -1,423 +1,461 @@
-import React from 'react';
-import './App.css';
-import Highlight from 'react-highlighter';
-import ReactCountryFlag from 'react-country-flag';
+import React from "react";
+import "./App.css";
+import Highlight from "react-highlighter";
+import ReactCountryFlag from "react-country-flag";
 
-const API = 'https://api.tvmaze.com';
+const API = "https://api.tvmaze.com";
 
 async function fetcher(endpoint) {
-    const response = await fetch(`${API}${endpoint}`);
+  const response = await fetch(`${API}${endpoint}`);
 
-    return await response.json();
+  return await response.json();
 }
 
 function App() {
-    const [show, setShow] = React.useState({});
-    const [episodes, setEpisodes] = React.useState([]);
-    const [cast, setCast] = React.useState(null);
-    const [shows, setShows] = React.useState([]);
-    const [isLoading, setIsLoading] = React.useState(false);
-    const [hasErrors, setHasErrors] = React.useState(false);
-    const [isSummaryLoading, setIsSummaryLoading] = React.useState(false);
-    const [hasSummaryLoadingErrors, setHasSummaryLoadingErrors] = React.useState(false);
+  const [show, setShow] = React.useState({});
+  const [episodes, setEpisodes] = React.useState([]);
+  const [cast, setCast] = React.useState(null);
+  const [shows, setShows] = React.useState([]);
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [hasErrors, setHasErrors] = React.useState(false);
+  const [isSummaryLoading, setIsSummaryLoading] = React.useState(false);
+  const [hasSummaryLoadingErrors, setHasSummaryLoadingErrors] = React.useState(
+    false
+  );
 
-    function submitHandler(query) {
-        setIsLoading(true);
-        setHasErrors(false);
+  function submitHandler(query) {
+    setIsLoading(true);
+    setHasErrors(false);
 
-        fetcher(`/search/shows?q=${query}`)
-            .then((shows) => {
-                const showList = shows.map((entry) => entry.show);
+    fetcher(`/search/shows?q=${query}`)
+      .then((shows) => {
+        const showList = shows.map((entry) => entry.show);
 
-                setIsLoading(false);
+        setIsLoading(false);
 
-                setShows(showList);
-            })
-            .catch((error) => {
-                setHasErrors(true);
-                setIsLoading(false);
+        setShows(showList);
+      })
+      .catch((error) => {
+        setHasErrors(true);
+        setIsLoading(false);
 
-                console.error(error.message);
-            });
-    }
+        console.error(error.message);
+      });
+  }
 
-    function clickHandler(id) {
-        const endpoints = [`/shows/${id}`, `/shows/${id}/episodes`, `/shows/${id}/cast`];
-        const promises = endpoints.map((endpoint) => fetcher(endpoint));
+  function clickHandler(id) {
+    const endpoints = [
+      `/shows/${id}`,
+      `/shows/${id}/episodes`,
+      `/shows/${id}/cast`,
+    ];
+    const promises = endpoints.map((endpoint) => fetcher(endpoint));
 
-        setIsSummaryLoading(true);
-        setHasSummaryLoadingErrors(false);
+    setIsSummaryLoading(true);
+    setHasSummaryLoadingErrors(false);
 
-        Promise.all(promises)
-            .then((data) => {
-                const [show, episodes, cast] = data;
+    Promise.all(promises)
+      .then((data) => {
+        const [show, episodes, cast] = data;
 
-                setIsSummaryLoading(false);
+        setIsSummaryLoading(false);
 
-                setShow(show);
-                setEpisodes(episodes);
-                setCast(cast);
-            })
-            .catch((error) => {
-                setHasSummaryLoadingErrors(true);
-                setIsSummaryLoading(false);
+        setShow(show);
+        setEpisodes(episodes);
+        setCast(cast);
+      })
+      .catch((error) => {
+        setHasSummaryLoadingErrors(true);
+        setIsSummaryLoading(false);
 
-                console.error(error.message);
-            });
-    }
+        console.error(error.message);
+      });
+  }
 
-    return (
-        <>
-            <div>
-                <Form onSubmit={submitHandler} />
-                {hasErrors ? <HasErrors /> : null}
-                {isLoading ? <IsLoading /> : <Shows shows={shows} onClick={clickHandler} />}
-            </div>
-            <ShowDetail
-                show={show}
-                isSummaryLoading={isSummaryLoading}
-                hasSummaryLoadingErrors={hasSummaryLoadingErrors}
-            />
-            <ShowSummary
-                episodes={episodes}
-                cast={cast}
-                isSummaryLoading={isSummaryLoading}
-                hasSummaryLoadingErrors={hasSummaryLoadingErrors}
-            />
-        </>
-    );
+  return (
+    <>
+      <div>
+        <Form onSubmit={submitHandler} />
+        {hasErrors ? <HasErrors /> : null}
+        {isLoading ? (
+          <IsLoading />
+        ) : (
+          <Shows shows={shows} onClick={clickHandler} />
+        )}
+      </div>
+      <ShowDetail
+        show={show}
+        isSummaryLoading={isSummaryLoading}
+        hasSummaryLoadingErrors={hasSummaryLoadingErrors}
+      />
+      <ShowSummary
+        episodes={episodes}
+        cast={cast}
+        isSummaryLoading={isSummaryLoading}
+        hasSummaryLoadingErrors={hasSummaryLoadingErrors}
+      />
+    </>
+  );
 }
 
 function Shows({ shows, onClick }) {
-    return (
-        <div>
-            <ShowList shows={shows} onClick={onClick} />
-        </div>
-    );
+  return (
+    <div>
+      <ShowList shows={shows} onClick={onClick} />
+    </div>
+  );
 }
 
 function ShowDetail({ show, isSummaryLoading, hasSummaryLoadingErrors }) {
-    return (
-        <div>
-            {hasSummaryLoadingErrors ? <HasErrors /> : null}
-            {isSummaryLoading ? (
-                <IsLoading />
-            ) : (
-                <>
-                    {Object.keys(show).length > 0 && (
-                        <>
-                            <h1>{show.name}</h1>
-                            <img src={show.image && show.image.medium} alt={show.name} />
-                            <p dangerouslySetInnerHTML={createMarkup(show.summary)} />
-                            <ShowTable show={show} />
-                        </>
-                    )}
-                </>
-            )}
-        </div>
-    );
+  return (
+    <div>
+      {hasSummaryLoadingErrors ? <HasErrors /> : null}
+      {isSummaryLoading ? (
+        <IsLoading />
+      ) : (
+        <>
+          {Object.keys(show).length > 0 && (
+            <>
+              <h1>{show.name}</h1>
+              <img src={show.image && show.image.medium} alt={show.name} />
+              <p dangerouslySetInnerHTML={createMarkup(show.summary)} />
+              <ShowTable show={show} />
+            </>
+          )}
+        </>
+      )}
+    </div>
+  );
 }
 
 function ShowTable({ show }) {
-    return (
-        <table>
-            <tbody>
-                <tr>
-                    <td>Premiered</td>
-                    <td>{show.premiered}</td>
-                </tr>
-                <tr>
-                    <td>Network</td>
-                    <td>
-                        {show?.network?.name} <ReactCountryFlag countryCode={show?.network?.country?.code} />
-                    </td>
-                </tr>
-                <tr>
-                    <td>Type</td>
-                    <td>{show.type}</td>
-                </tr>
-                <tr>
-                    <td>Language</td>
-                    <td>{show.language}</td>
-                </tr>
-                <tr>
-                    <td>Genres</td>
-                    <td>{show.genres.join(', ')}</td>
-                </tr>
-                <tr>
-                    <td>Status</td>
-                    <td>{show.status}</td>
-                </tr>
-                <tr>
-                    <td>Runtime</td>
-                    <td>{show.runtime}</td>
-                </tr>
-                <tr>
-                    <td>Site</td>
-                    <td>
-                        {show.officialSite && (
-                            <a href={show.officialSite} alt={show.name}>
-                                {show.name}
-                            </a>
-                        )}
-                    </td>
-                </tr>
-                <tr>
-                    <td>Externals</td>
-                    <td>
-                        <Externals externals={show.externals} />
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-    );
+  return (
+    <table>
+      <tbody>
+        <tr>
+          <td>Premiered</td>
+          <td>{show.premiered}</td>
+        </tr>
+        <tr>
+          <td>Network</td>
+          <td>
+            {show?.network?.name}{" "}
+            <ReactCountryFlag countryCode={show?.network?.country?.code} />
+          </td>
+        </tr>
+        <tr>
+          <td>Type</td>
+          <td>{show.type}</td>
+        </tr>
+        <tr>
+          <td>Language</td>
+          <td>{show.language}</td>
+        </tr>
+        <tr>
+          <td>Genres</td>
+          <td>{show.genres.join(", ")}</td>
+        </tr>
+        <tr>
+          <td>Status</td>
+          <td>{show.status}</td>
+        </tr>
+        <tr>
+          <td>Runtime</td>
+          <td>{show.runtime}</td>
+        </tr>
+        <tr>
+          <td>Site</td>
+          <td>
+            {show.officialSite && (
+              <a href={show.officialSite} alt={show.name}>
+                {show.name}
+              </a>
+            )}
+          </td>
+        </tr>
+        <tr>
+          <td>Externals</td>
+          <td>
+            <Externals externals={show.externals} />
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  );
 }
 
-function ShowSummary({ episodes, cast: castList, isSummaryLoading, hasSummaryLoadingErrors }) {
-    const [seasons, setSeasons] = React.useState([]);
-    const [cast, setCast] = React.useState([]);
-    const [filter, setFilter] = React.useState('');
-    const [isEpisodesOpen, setIsEpisodesOpen] = React.useState(true);
-    const [isCastOpen, setIsCastOpen] = React.useState(false);
+function ShowSummary({
+  episodes,
+  cast: castList,
+  isSummaryLoading,
+  hasSummaryLoadingErrors,
+}) {
+  const [seasons, setSeasons] = React.useState([]);
+  const [cast, setCast] = React.useState([]);
+  const [filter, setFilter] = React.useState("");
+  const [isEpisodesOpen, setIsEpisodesOpen] = React.useState(true);
+  const [isCastOpen, setIsCastOpen] = React.useState(false);
 
-    React.useEffect(() => {
-        setSeasons(groupEposiodesBySeason(episodes));
-    }, [episodes]);
+  React.useEffect(() => {
+    setSeasons(groupEposiodesBySeason(episodes));
+  }, [episodes]);
 
-    React.useEffect(() => {
-        setCast(castList);
-    }, [castList]);
+  React.useEffect(() => {
+    setCast(castList);
+  }, [castList]);
 
-    function clickHandler(tab) {
-        if (tab === 'episodes') {
-            setIsEpisodesOpen(true);
-            setIsCastOpen(false);
-        } else {
-            setIsEpisodesOpen(false);
-            setIsCastOpen(true);
-        }
+  function clickHandler(tab) {
+    if (tab === "episodes") {
+      setIsEpisodesOpen(true);
+      setIsCastOpen(false);
+    } else {
+      setIsEpisodesOpen(false);
+      setIsCastOpen(true);
     }
+  }
 
-    return (
-        <div>
-            {hasSummaryLoadingErrors ? <HasErrors /> : null}
-            {isSummaryLoading ? (
-                <IsLoading />
-            ) : (
+  return (
+    <div>
+      {hasSummaryLoadingErrors ? <HasErrors /> : null}
+      {isSummaryLoading ? (
+        <IsLoading />
+      ) : (
+        <>
+          {!seasons.length ? (
+            <div />
+          ) : (
+            <>
+              <Tabs
+                isEpisodesOpen={isEpisodesOpen}
+                isCastOpen={isCastOpen}
+                onClick={clickHandler}
+              />
+              {isEpisodesOpen ? (
                 <>
-                    {!seasons.length ? (
-                        <div />
-                    ) : (
-                        <>
-                            <Tabs isEpisodesOpen={isEpisodesOpen} isCastOpen={isCastOpen} onClick={clickHandler} />
-                            {isEpisodesOpen ? (
-                                <>
-                                    <input
-                                        placeholder="Filter by episode name"
-                                        onChange={(event) => setFilter(event.target.value)}
-                                        style={{ marginBottom: '10px' }}
-                                        value={filter}
-                                    />
-                                    {seasons
-                                        .filter((season) => {
-                                            const [, episodes] = season;
+                  <input
+                    placeholder="Filter by episode name"
+                    onChange={(event) => setFilter(event.target.value)}
+                    style={{ marginBottom: "10px" }}
+                    value={filter}
+                  />
+                  {seasons
+                    .filter((season) => {
+                      const [, episodes] = season;
 
-                                            return episodes.some((episode) =>
-                                                episode.name.toLowerCase().includes(filter.toLowerCase())
-                                            );
-                                        })
-                                        .map(([number, episodes]) => {
-                                            return (
-                                                <Season
-                                                    key={number}
-                                                    number={number}
-                                                    episodes={episodes}
-                                                    filter={filter}
-                                                />
-                                            );
-                                        })}
-                                </>
-                            ) : (
-                                <Cast cast={cast} />
-                            )}
-                        </>
-                    )}
+                      return episodes.some((episode) =>
+                        episode.name
+                          .toLowerCase()
+                          .includes(filter.toLowerCase())
+                      );
+                    })
+                    .map(([number, episodes]) => {
+                      return (
+                        <Season
+                          key={number}
+                          number={number}
+                          episodes={episodes}
+                          filter={filter}
+                        />
+                      );
+                    })}
                 </>
-            )}
-        </div>
-    );
+              ) : (
+                <Cast cast={cast} />
+              )}
+            </>
+          )}
+        </>
+      )}
+    </div>
+  );
 }
 
 function Tabs({ isEpisodesOpen, isCastOpen, onClick }) {
-    return (
-        <ul className="tabs">
-            <li>
-                <a
-                    href="!#"
-                    style={{ textDecoration: isEpisodesOpen ? 'underline' : 'none' }}
-                    onClick={(event) => {
-                        event.preventDefault();
+  return (
+    <ul className="tabs">
+      <li>
+        <a
+          href="!#"
+          style={{ textDecoration: isEpisodesOpen ? "underline" : "none" }}
+          onClick={(event) => {
+            event.preventDefault();
 
-                        onClick('episodes');
-                    }}
-                >
-                    Episodes
-                </a>
-            </li>
-            <li>
-                <a
-                    href="!#"
-                    style={{ textDecoration: isCastOpen ? 'underline' : 'none' }}
-                    onClick={(event) => {
-                        event.preventDefault();
+            onClick("episodes");
+          }}
+        >
+          Episodes
+        </a>
+      </li>
+      <li>
+        <a
+          href="!#"
+          style={{ textDecoration: isCastOpen ? "underline" : "none" }}
+          onClick={(event) => {
+            event.preventDefault();
 
-                        onClick('cast');
-                    }}
-                >
-                    Cast
-                </a>
-            </li>
-        </ul>
-    );
+            onClick("cast");
+          }}
+        >
+          Cast
+        </a>
+      </li>
+    </ul>
+  );
 }
 
 function Form({ onSubmit }) {
-    const [query, setQuery] = React.useState('');
+  const [query, setQuery] = React.useState("");
 
-    return (
-        <form
-            autoComplete="off"
-            onSubmit={(event) => {
-                event.preventDefault();
+  return (
+    <form
+      autoComplete="off"
+      onSubmit={(event) => {
+        event.preventDefault();
 
-                onSubmit(query);
-            }}
-        >
-            <div className="group">
-                <label htmlFor="query">Query for tv show name</label>
-                <input name="query" id="query" value={query} onChange={(event) => setQuery(event.target.value)} />
-            </div>
-            <div className="group">
-                <button type="submit">Send</button>
-            </div>
-        </form>
-    );
+        onSubmit(query);
+      }}
+    >
+      <div className="group">
+        <label htmlFor="query">Query for tv show name</label>
+        <input
+          name="query"
+          id="query"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+        />
+      </div>
+      <div className="group">
+        <button type="submit">Send</button>
+      </div>
+    </form>
+  );
 }
 
 function ShowList({ shows, onClick }) {
-    return (
-        <div>
-            {shows.map((show) => (
-                <Show key={show.id} show={show} onClick={onClick} />
-            ))}
-        </div>
-    );
+  return (
+    <div>
+      {shows.map((show) => (
+        <Show key={show.id} show={show} onClick={onClick} />
+      ))}
+    </div>
+  );
 }
 
 function Show({ show, onClick }) {
-    return (
-        <li>
-            <a
-                href="!#"
-                onClick={(event) => {
-                    event.preventDefault();
+  return (
+    <li>
+      <a
+        href="!#"
+        onClick={(event) => {
+          event.preventDefault();
 
-                    onClick(show.id);
-                }}
-            >
-                {show.name}
-            </a>
-        </li>
-    );
+          onClick(show.id);
+        }}
+      >
+        {show.name}
+      </a>
+    </li>
+  );
 }
 
 function Externals({ externals }) {
-    const externalList = Object.entries(externals).filter((external) => external[1]);
+  const externalList = Object.entries(externals).filter(
+    (external) => external[1]
+  );
 
-    return (
-        <ul style={{ margin: 0 }}>
-            {externalList.map(([external, id]) => (
-                <li key={id}>
-                    {external} - {id}
-                </li>
-            ))}
-        </ul>
-    );
+  return (
+    <ul style={{ margin: 0 }}>
+      {externalList.map(([external, id]) => (
+        <li key={id}>
+          {external} - {id}
+        </li>
+      ))}
+    </ul>
+  );
 }
 
 function Season({ number, episodes, filter }) {
-    return (
-        <details open={filter.length}>
-            <summary>{number}</summary>
-            {episodes.map((episode) => (
-                <Episode key={episode.id} episode={episode} filter={filter} />
-            ))}
-        </details>
-    );
+  return (
+    <details open={filter.length}>
+      <summary>{number}</summary>
+      {episodes.map((episode) => (
+        <Episode key={episode.id} episode={episode} filter={filter} />
+      ))}
+    </details>
+  );
 }
 
 function Episode({ episode, filter }) {
-    return (
-        <details>
-            <summary>
-                <Highlight search={filter}>{episode.name}</Highlight>
-            </summary>
-            {episode.image && <img src={episode.image.medium} alt={episode.name} />}
-            <p dangerouslySetInnerHTML={createMarkup(episode.summary)} />
-        </details>
-    );
+  return (
+    <details>
+      <summary>
+        <Highlight search={filter}>{episode.name}</Highlight>
+      </summary>
+      {episode.image && <img src={episode.image.medium} alt={episode.name} />}
+      <p dangerouslySetInnerHTML={createMarkup(episode.summary)} />
+    </details>
+  );
 }
 
 function Cast({ cast }) {
-    return (
-        <div style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center' }}>
-            {cast.map((entry) => {
-                const { person, character } = entry;
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "row",
+        flexWrap: "wrap",
+        justifyContent: "center",
+      }}
+    >
+      {cast.map((entry) => {
+        const { person, character } = entry;
 
-                return (
-                    <figure key={entry.person.id}>
-                        <img src={character?.image?.medium} alt={character.name} />
-                        <figcaption>
-                            <p style={{ margin: '10px 0 0 0' }}>
-                                <small>{person.name} as</small>
-                            </p>
-                            <p style={{ margin: 0 }}>
-                                <small>
-                                    <strong>{character.name}</strong>
-                                </small>
-                            </p>
-                        </figcaption>
-                    </figure>
-                );
-            })}
-        </div>
-    );
+        return (
+          <figure key={entry.person.id}>
+            <img src={character?.image?.medium} alt={character.name} />
+            <figcaption>
+              <p style={{ margin: "10px 0 0 0" }}>
+                <small>{person.name} as</small>
+              </p>
+              <p style={{ margin: 0 }}>
+                <small>
+                  <strong>{character.name}</strong>
+                </small>
+              </p>
+            </figcaption>
+          </figure>
+        );
+      })}
+    </div>
+  );
 }
 
 function IsLoading() {
-    return <p>Is loading...</p>;
+  return <p>Is loading...</p>;
 }
 
 function HasErrors() {
-    return <p>An error has occurred...</p>;
+  return <p>An error has occurred...</p>;
 }
 
 function createMarkup(summary) {
-    return { __html: summary };
+  return { __html: summary };
 }
 
 function groupEposiodesBySeason(episodes) {
-    const result = episodes.reduce((previousValue, currentValue) => {
-        if (!previousValue[currentValue.season]) {
-            previousValue[currentValue.season] = [currentValue];
-        } else {
-            previousValue[currentValue.season] = previousValue[currentValue.season].concat(currentValue);
-        }
+  const result = episodes.reduce((previousValue, currentValue) => {
+    if (!previousValue[currentValue.season]) {
+      previousValue[currentValue.season] = [currentValue];
+    } else {
+      previousValue[currentValue.season] = previousValue[
+        currentValue.season
+      ].concat(currentValue);
+    }
 
-        return previousValue;
-    }, {});
+    return previousValue;
+  }, {});
 
-    return Object.entries(result);
+  return Object.entries(result);
 }
 
 export default App;
