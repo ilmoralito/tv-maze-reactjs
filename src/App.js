@@ -319,9 +319,13 @@ function Cast({ cast }) {
                     <figure key={entry.person.id}>
                         <img src={character?.image?.medium} alt={character.name} />
                         <figcaption>
-                            <p style={{ margin: '10px 0 0 0' }}>{person.name} as</p>
+                            <p style={{ margin: '10px 0 0 0' }}>
+                                <small>{person.name} as</small>
+                            </p>
                             <p style={{ margin: 0 }}>
-                                <strong>{character.name}</strong>
+                                <small>
+                                    <strong>{character.name}</strong>
+                                </small>
                             </p>
                         </figcaption>
                     </figure>
