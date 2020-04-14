@@ -380,6 +380,9 @@ function Season({ number, episodes, filter }) {
   return (
     <details open={filter.length}>
       <summary>{number}</summary>
+      <p>
+        <small>{episodes.length} episodes</small>
+      </p>
       {episodes.map((episode) => (
         <Episode key={episode.id} episode={episode} filter={filter} />
       ))}
