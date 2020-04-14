@@ -42,21 +42,35 @@ function App() {
   }
 
   function clickHandler(id) {
+    setIsSummaryLoading(true);
+    setHasSummaryLoadingErrors(false);
+
+    if (hasLocalStorage() && existInLocalStorage(id)) {
+      const [show, episodes, cast] = fetchFromLocalStorage(id);
+
+      setShow(show);
+      setEpisodes(episodes);
+      setCast(cast);
+      setIsSummaryLoading(false);
+
+      return false;
+    }
+
     const endpoints = [
       `/shows/${id}`,
       `/shows/${id}/episodes`,
       `/shows/${id}/cast`,
     ];
-    const promises = endpoints.map((endpoint) => fetcher(endpoint));
 
-    setIsSummaryLoading(true);
-    setHasSummaryLoadingErrors(false);
+    const promises = endpoints.map((endpoint) => fetcher(endpoint));
 
     Promise.all(promises)
       .then((data) => {
         const [show, episodes, cast] = data;
 
         setIsSummaryLoading(false);
+
+        syncLocalStorage({ id, data });
 
         setShow(show);
         setEpisodes(episodes);
@@ -461,6 +475,26 @@ function groupEposiodesBySeason(episodes) {
   }, {});
 
   return Object.entries(result);
+}
+
+function syncLocalStorage({ id, data }) {
+  let storage = localStorage.maze ? JSON.parse(localStorage.maze) : {};
+
+  storage[id] = data;
+
+  localStorage.maze = JSON.stringify(storage);
+}
+
+function fetchFromLocalStorage(id) {
+  return JSON.parse(localStorage.maze)[id];
+}
+
+function hasLocalStorage() {
+  return localStorage.maze !== undefined;
+}
+
+function existInLocalStorage(id) {
+  return id in JSON.parse(localStorage.maze);
 }
 
 export default App;
